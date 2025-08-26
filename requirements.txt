@@ -1,11 +1,15 @@
-fastapi
-uvicorn
-pandas
+fastapi==0.111.0
+uvicorn==0.30.1
+pandas==2.2.2
 google-analytics-data==0.18.19
 google-auth==2.27.0
-google-auth-oauthlib
+google-auth-oauthlib==1.1.0
 google-ads==22.0.0
-pydantic==2.11.7  # Asegúrate de tener la versión correcta de Pydantic
-grpcio==1.74.0  # Esto es necesario para las conexiones de gRPC, como Google Ads API
-google-api-core==2.25.1  # Para Google API en general
-protobuf==4.25.8  # Para la serialización de mensajes, necesaria para gRPC
+pydantic==2.11.7
+grpcio==1.74.0
+google-api-core==2.25.1
+protobuf==4.25.8
+tenacity==8.2.3
+python-dotenv==1.0.1
+requests==2.31.0
+httpx==0.27.0
