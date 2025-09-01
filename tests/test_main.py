@@ -32,3 +32,21 @@ def test_exportar() -> None:
     data = r.json()
     assert not data.get("partial")
     assert len(data.get("rows", [])) > 0
+
+
+@pytest.mark.e2e
+def test_exportar_many_pages_no_limit() -> None:
+    s = _session()
+    start = (dt.date.today() - dt.timedelta(days=30)).isoformat()
+    end = dt.date.today().isoformat()
+    # small pageSize to force multiple pages
+    r = s.get(
+        f"{BASE_URL}/exportar",
+        params={"from": start, "to": end, "pageSize": 100},
+        timeout=60,
+        proxies={"http": None, "https": None},
+    )
+    r.raise_for_status()
+    data = r.json()
+    assert data.get("pages", 0) > 1
+    assert not data.get("partial")

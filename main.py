@@ -199,7 +199,13 @@ class ExportarParams(BaseModel):
     start: str = Field(..., description="YYYY-MM-DD", alias="from")
     end: str = Field(..., description="YYYY-MM-DD", alias="to")
     page_size: int = Field(1000, ge=1, alias="pageSize", description="Rows per page")
-    max_pages: int = Field(200, ge=1, le=2000, alias="maxPages", description="Safety cap")
+    max_pages: Optional[int] = Field(
+        0,
+        ge=0,
+        le=2000,
+        alias="maxPages",
+        description="Safety cap; 0 or None = no limit",
+    )
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -211,7 +217,9 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
     page_size = params.page_size
     max_pages = params.max_pages
     rid = getattr(request.state, "request_id", str(uuid.uuid4()))
-    log.info(f"/exportar start={s_iso} end={e_iso} page_size={page_size} max_pages={max_pages}")
+    log.info(
+        f"/exportar start={s_iso} end={e_iso} page_size={page_size} max_pages={max_pages}"
+    )
 
     client = _ga4_client()
     dims = _dims()
@@ -270,9 +278,7 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
                 offset = 0
             else:
                 offset += batch_count
-            if (total_rows_reported is not None and offset >= total_rows_reported) or pages >= max_pages:
-                if pages >= max_pages:
-                    log.warning("Reached max_pages cap; streaming will end early.")
+            if total_rows_reported is not None and offset >= total_rows_reported:
                 break
 
             time.sleep(0.12)
@@ -281,10 +287,7 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
 
         partial = False
         reason: Optional[str] = None
-        if pages >= max_pages:
-            partial = True
-            reason = "max_pages"
-        elif total_rows_reported is not None and offset < (total_rows_reported or 0):
+        if total_rows_reported is not None and offset < (total_rows_reported or 0):
             partial = True
             reason = "ga4_limit"
 

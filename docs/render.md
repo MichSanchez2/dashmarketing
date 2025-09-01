@@ -9,6 +9,9 @@
 - `GA4_MAX_RETRIES`
 - `GOOGLE_ADS_YAML_PATH`
 
+## API notes
+- The `/exportar` endpoint accepts an optional `maxPages` query parameter. Set it to `0` or omit it to remove the page cap (default: no limit).
+
 ## Start command
 ```
 uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
