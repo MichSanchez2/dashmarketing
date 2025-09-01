@@ -17,6 +17,12 @@ uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
 ## Logs
 Use the Render dashboard or `render logs` CLI. Each request includes `X-Request-ID`.
 
+## Partial responses
+The `exportar` endpoint may return a JSON response with a boolean `partial` flag.
+Clients must verify that `partial` is `false` before using the data and should
+retry later if it is `true`. See `powerbi_m_example.m` for an example of failing
+early when a partial response is encountered.
+
 ## Common issues
 - CORS 4xx: check `ALLOWED_ORIGINS`.
 - 413 payload: result too large, lower `pageSize`.

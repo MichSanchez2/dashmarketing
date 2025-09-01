@@ -38,9 +38,10 @@ def main() -> int:
         print("exportar status", resp.status_code, file=sys.stderr)
         return 1
     data = resp.json()
+    assert data.get("partial") is False, f"partial flag is {data.get('partial')!r}"
     rows = data.get("rows", [])
-    if data.get("partial") or not rows:
-        print("partial or empty", file=sys.stderr)
+    if not rows:
+        print("empty", file=sys.stderr)
         return 1
     print(json.dumps({"rows": len(rows), "duration_ms": int(duration * 1000)}))
     return 0
