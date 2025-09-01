@@ -116,11 +116,13 @@ def _month_range_iter(start: dt.date, end: dt.date) -> List[dt.date]:
         cur = dt.date(year, month, 1)
     return out
 
-def _agg_totals(client: BetaAnalyticsDataClient, start_iso: str, end_iso: str) -> Dict[str, float]:
+def _agg_totals(client: BetaAnalyticsDataClient, detail_req: RunReportRequest) -> Dict[str, float]:
     names = ["sessions", "activeUsers", "screenPageViews", "conversions", "totalRevenue"]
     req = RunReportRequest(
-        property=f"properties/{PROPERTY_ID}",
-        date_ranges=[DateRange(start_date=start_iso, end_date=end_iso)],
+        property=detail_req.property,
+        date_ranges=detail_req.date_ranges,
+        dimension_filter=detail_req.dimension_filter,
+        metric_filter=detail_req.metric_filter,
         dimensions=[],
         metrics=[Metric(name=m) for m in names],
         limit=1,
@@ -291,7 +293,7 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
             partial = True
             reason = "ga4_limit"
 
-        agg = _agg_totals(client, s_iso, e_iso)
+        agg = _agg_totals(client, req)
         diff = {
             "sessions": _pct_diff(sum_sessions, agg.get("sessions", 0.0)),
             "activeUsers": _pct_diff(sum_users, agg.get("activeUsers", 0.0)),
@@ -349,6 +351,12 @@ def exportar_mensual(request: Request, params: ExportarMensualParams = Depends()
     client = _ga4_client()
     dims = _dims()
     mets = _mets()
+    detail_req = RunReportRequest(
+        property=f"properties/{PROPERTY_ID}",
+        date_ranges=[DateRange(start_date=s_iso, end_date=e_iso)],
+        dimensions=dims,
+        metrics=mets,
+    )
 
     pages_total = 0
     sum_sessions = sum_users = sum_views = sum_conv = sum_rev = 0.0
@@ -413,7 +421,7 @@ def exportar_mensual(request: Request, params: ExportarMensualParams = Depends()
 
         yield b"],"
 
-        agg = _agg_totals(client, s_iso, e_iso)
+        agg = _agg_totals(client, detail_req)
         diff = {
             "sessions": _pct_diff(sum_sessions, agg.get("sessions", 0.0)),
             "activeUsers": _pct_diff(sum_users, agg.get("activeUsers", 0.0)),
