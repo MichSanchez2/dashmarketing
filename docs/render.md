@@ -22,6 +22,8 @@ Use the Render dashboard or `render logs` CLI. Each request includes `X-Request-
 - 413 payload: result too large, lower `pageSize`.
 - 502/504: upstream timeout; view GA4 quotas.
 - Cold starts on free plan may exceed 50s.
+- Large exports stream until GA4 `rowCount` is exhausted. Use `maxPages` query
+  parameter to set an optional safety cap.
 
 ## Corporate proxy / 403 tunnel
 If you see `ProxyError('Tunnel connection failed: 403 Forbidden')` when running probes:

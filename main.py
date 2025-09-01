@@ -199,7 +199,12 @@ class ExportarParams(BaseModel):
     start: str = Field(..., description="YYYY-MM-DD", alias="from")
     end: str = Field(..., description="YYYY-MM-DD", alias="to")
     page_size: int = Field(1000, ge=1, alias="pageSize", description="Rows per page")
-    max_pages: int = Field(200, ge=1, le=2000, alias="maxPages", description="Safety cap")
+    max_pages: Optional[int] = Field(
+        None,
+        ge=1,
+        alias="maxPages",
+        description="Optional safety cap; unlimited by default",
+    )
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -270,9 +275,10 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
                 offset = 0
             else:
                 offset += batch_count
-            if (total_rows_reported is not None and offset >= total_rows_reported) or pages >= max_pages:
-                if pages >= max_pages:
-                    log.warning("Reached max_pages cap; streaming will end early.")
+            if total_rows_reported is not None and offset >= total_rows_reported:
+                break
+            if max_pages is not None and pages >= max_pages:
+                log.warning("Reached max_pages cap; streaming will end early.")
                 break
 
             time.sleep(0.12)
@@ -281,7 +287,9 @@ def exportar_datos(request: Request, params: ExportarParams = Depends()):
 
         partial = False
         reason: Optional[str] = None
-        if pages >= max_pages:
+        if max_pages is not None and pages >= max_pages and (
+            total_rows_reported is None or offset < (total_rows_reported or 0)
+        ):
             partial = True
             reason = "max_pages"
         elif total_rows_reported is not None and offset < (total_rows_reported or 0):
